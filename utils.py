@@ -1,5 +1,7 @@
 import matplotlib.colors as col
 from IPython.core.display import HTML, display
+import numpy as np
+from itertools import cycle, islice
 
 
 def print_color(color):
