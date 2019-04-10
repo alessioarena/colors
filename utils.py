@@ -38,7 +38,6 @@ def generate_linear_cmap(color_list, name='CSIRO'):
         steps = []
         for c, x in zip(color_list, xs):
             steps.append((x, c[idx], c[idx]))
-        print(tuple(steps))
         cdict[channel] = tuple(steps)
     return col.LinearSegmentedColormap(name, cdict)
 
