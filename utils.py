@@ -14,15 +14,31 @@ def print_color(color):
     return display(HTML(out))
 
 
-def hex_to_rgb(hex_code):
+def hex_to_rgb(hex_code, normalized=False):
     h = hex_code.lstrip('#')
+    if normalized:
+        return tuple(float(int(h[i:i+2], 16))/255 for i in (0, 2 ,4))
     return tuple(int(h[i:i+2], 16) for i in (0, 2 ,4))
 
 
-def generate_cmap(color_list):
+def generate_discrete_cmap(color_list):
     color_list = [hex_to_rgb(c) for c in color_list]
     return col.ListedColormap(color_list)
 
 
 def generate_palette(color_list, n_colors):
     return np.array(list(islice(cycle(color_list), n_colors)))
+
+
+def generate_linear_cmap(color_list, name='CSIRO'):
+    xs = np.linspace(0, 1, len(color_list))
+    cdict = {}
+    color_list = [hex_to_rgb(h, normalized=True) for h in color_list]
+    for channel, idx in zip(['red', 'green', 'blue'], (0, 1, 2)):
+        steps = []
+        for c, x in zip(color_list, xs):
+            steps.append((x, c[idx], c[idx]))
+        print(tuple(steps))
+        cdict[channel] = tuple(steps)
+    return col.LinearSegmentedColormap(name, cdict)
+
