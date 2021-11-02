@@ -3,8 +3,34 @@ import matplotlib.cm as cm
 from IPython.core.display import HTML, display
 import numpy as np
 from itertools import cycle, islice
-from branca.utilities import color_brewer, linear_gradient
+from branca.utilities import color_brewer
 
+from .cmaps import _csiro_cmaps, _branca_cmaps, _matplotlib_cmaps, csiro_registry
+
+
+# for python 2 and python 3 compatibility
+try:
+    # python 2
+    basestring # type: ignore
+except NameError:
+    # python 3
+    basestring = (str, bytes)
+
+
+def _smells_like_branca(cmap):
+    if not isinstance(cmap, basestring):
+        raise TypeError("the argument cmap must be a colormap name")
+    return cmap.rstrip('_r') in _branca_cmaps
+
+def _smells_like_csiro(cmap):
+    if not isinstance(cmap, basestring):
+        raise TypeError("the argument cmap must be a colormap name")
+    return cmap.rstrip('_r') in _csiro_cmaps
+
+def _smells_like_matplotlib(cmap):
+    if not isinstance(cmap, basestring):
+        raise TypeError("the argument cmap must be a colormap name")
+    return cmap.rstrip('_r') in _matplotlib_cmaps
 
 def print_color(color):
     """Utility to print hex color codes in your jupyter notebook
@@ -40,7 +66,6 @@ def hex_to_rgb(hex_code, normalized=True):
     if normalized:
         return tuple(float(int(h[i:i+2], 16))/255 for i in (0, 2 ,4))
     return tuple(int(h[i:i+2], 16) for i in (0, 2 ,4))
-
 
 def rgb_to_hex(rgb_tuple, normalized=True):
     """Utility to convert RGB or RGBA tuples to HEX color strings
@@ -101,19 +126,26 @@ def cmap_to_rgb(cmap):
     return [c[:3] for c in cmap.colors]
 
 
-def generate_discrete_cmap(color_list, name='CSIRO'):
+def generate_discrete_cmap(color_list, name='CSIRO', n_colors=20):
     """Function to generate discrete colormaps
     
     Arguments:
     -----------
-    color_list : list of str
+    color_list : list of str, str or Colormap
         list of colors
+        if passing a str, this will be interpreted as a colormap to retrieve
+        if passing a Colormap, this will be discretized
 
     Returns:
     -----------
     out : ListedColormap
         colormap object
     """
+    if isinstance(color_list, basestring):
+        color_list = get_cmap(color_list)
+    if isinstance(color_list, col.Colormap):
+        sampling = np.linspace(0, 1, n_colors)
+        return col.ListedColormap(color_list(sampling), name=name)
     color_list = [hex_to_rgb(c) for c in color_list]
     return col.ListedColormap(color_list, name=name)
 
@@ -141,8 +173,10 @@ def generate_linear_cmap(color_list, name='CSIRO'):
     
     Arguments:
     -----------
-    color_list : list of str
+    color_list : list of str, str or ListedColormap
         list of HEX colors to use
+        if passing a str, this will be interpreted as a colormap name to retrieve
+        if passing a ListedColormap, this will be linearized
     name : str, optional (default : CSIRO)\n
         name of the colormap
     
@@ -151,6 +185,11 @@ def generate_linear_cmap(color_list, name='CSIRO'):
     out : LinearSegmentedColormap
         linear colormap
     """
+    if isinstance(color_list, basestring):
+        color_list = get_cmap(color_list)
+
+    if isinstance(color_list, col.ListedColormap):
+        return generate_linear_cmap(cmap_to_hex(color_list))
     xs = np.linspace(0, 1, len(color_list))
     cdict = {}
     color_list = [hex_to_rgb(h) for h in color_list]
@@ -179,7 +218,7 @@ def randomize_cmap(cmap, n=None, seed=None):
 
     """
     if isinstance(cmap, str):
-        cmap = cm.get_cmap(cmap)
+        cmap = get_cmap(cmap)
     elif isinstance(cmap, col.Colormap):
         pass
     else:
@@ -197,31 +236,46 @@ def randomize_cmap(cmap, n=None, seed=None):
     cmap = col.ListedColormap(cmap(vals[:n]))
     return cmap
 
-def sample_cmap(cmap, n):
-    """Utility to sample a Colormap
 
-    Parameters
-    ----------
-    cmap : matplotlib.colors.Colormap
-        Colormap to sample
-    n : int
-        number of colors to sample
+def get_cmap(cmap, return_hex=False):
+    if not isinstance(cmap, basestring):
+        raise TypeError("The argument cmap must be a valid colormap name")
+    name = cmap
 
-    Returns
-    -------
-    matplotlib.colors.ListedColormap
-        discrete colormap with sampled colors
+    if _smells_like_branca(cmap):
+        # BUG there is a bug with branca https://github.com/python-visualization/branca/issues/104
+        # to avoid that we need to iterate to find how many colors the colormap has, then retrieve all of them
+        for i in range(12, 5, -1):
+            try:
+                cmap = color_brewer(cmap, n=i)
+                if return_hex:
+                    return cmap
+                else:
+                    return generate_discrete_cmap(cmap, name=name)
+            except KeyError:
+                pass
+            except ValueError:
+                # BUG some cmaps appear on the branca registry but they are not there, like viridis
+                # in that case we can try matplotlib
+                break
+        else:
+            raise RuntimeError('Could not retrieve the branca colormap scheme')
 
-    """
-    if isinstance(cmap, str):
+    if _smells_like_csiro(cmap):
+        cmap = csiro_registry[cmap]
+        if return_hex:
+            return cmap
+        else:
+            return generate_discrete_cmap(cmap, name=name)
+
+    if _smells_like_matplotlib(cmap):
         cmap = cm.get_cmap(cmap)
-    elif isinstance(cmap, col.Colormap):
-        pass
-    else:
-        raise TypeError('The argument "cmap" must be a string or Colormap')
-    vals = np.linspace(0,1,n)
-    cmap = col.ListedColormap(cmap(vals))
-    return cmap
+        if return_hex:
+            return cmap_to_hex(cmap)
+        else:
+            return cmap
+
+    raise RuntimeError("Could not find the selected colormap. Please check available colormaps at https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html or https://matplotlib.org/stable/gallery/color/colormap_reference.html")
 
 
 def brew_colors(cmap, nbins=None):
@@ -231,44 +285,31 @@ def brew_colors(cmap, nbins=None):
     ----------
     cmap : str
         colormap name to retrieve
-    nbins : int, optional
-        number of discrete colors to have, by default None will generate a linear colormap
+    nbins : int, False or None, optional
+        number of discrete colors to have, by default None
+        passing None will return a discrete colormap with all available colors
+        passing False will return a linear colormap
 
     Returns
     -------
     ListedColormap or LinearSegmentColormap
         output colormap
     """
-
+    if not isinstance(cmap, basestring):
+        raise TypeError("The argument cmap must be a valid colormap name")
     name = cmap
-    # BUG there is a bug with branca https://github.com/python-visualization/branca/issues/104
-    # to avoid that we need to iterate to find how many colors the colormap has, then retrieve all of them
 
+    if nbins is False:
+        cmap = get_cmap(cmap, return_hex=True)
+        return generate_linear_cmap(cmap, name)
+    elif nbins == None:
+        return get_cmap(cmap)
+    elif isinstance(nbins, int):
 
-    for i in range(12, 5, -1):
-        try:
-            cmap = color_brewer(cmap, n=i)
-            if nbins is None:
-                return generate_linear_cmap(cmap, name)
-            hex_codes = linear_gradient(cmap, nbins)
-            return generate_discrete_cmap(hex_codes, name)
-        except KeyError:
-            pass
-        except ValueError:
-            break
+        cmap = get_cmap(cmap)
+        sampling = np.linspace(0,1,nbins)
+        return col.ListedColormap(cmap(sampling))
+
+        # return generate_discrete_cmap(hex_codes, name)
     else:
-        raise RuntimeError('Could not interpret the colormap scheme')
-    
-    if isinstance(cmap, col.Colormap):
-        pass
-    else:
-        try:
-            cmap = cm.get_cmap(cmap)
-        except ValueError:
-            raise ValueError("The selected colormap is not a matplotlib or branca (colorbrewer) colormap. Please check https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html or https://matplotlib.org/stable/gallery/color/colormap_reference.html for options")
-    
-    if nbins is None:
-        return cmap
-    vals = np.linspace(0, 1, nbins)
-    cmap = col.ListedColormap(cmap(vals), name)
-    return cmap
+        raise TypeError('The argument nbins must be None, False or integer')
