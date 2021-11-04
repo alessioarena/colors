@@ -93,7 +93,7 @@ def rgb_to_hex(rgb_tuple, normalized=True):
             if channel < 0 or channel > 255:
                 raise ValueError('Invalid RGB value encountered. Make sure than this represents a 8bit code')
             r.append(channel)
-    return '#%02x%02x%02x' % tuple(r)
+    return ('#%02x%02x%02x' % tuple(r)).upper()
 
 def cmap_to_hex(cmap):
     """Utility to convert a matplotlib.colors.Colormap to a list of HEX strings
@@ -108,7 +108,17 @@ def cmap_to_hex(cmap):
     list of str
         list of HEX strings
     """
-    return list(map(rgb_to_hex, cmap.colors))
+    if isinstance(cmap, basestring):
+        cmap = get_cmap(cmap)
+    elif isinstance(cmap, col.Colormap):
+        pass
+    else:
+        raise TypeError("The argument 'cmap' must be a colormap or colormap name")
+
+    try:
+        return list(map(rgb_to_hex, cmap.colors))
+    except AttributeError:
+        return list(map(rgb_to_hex, cmap(np.linspace(0, 1, 256))))
 
 def cmap_to_rgb(cmap):
     """Utility to convert a matplotlib.colors.Colormap to a list of RGB codes
@@ -123,7 +133,16 @@ def cmap_to_rgb(cmap):
     list of lists of floats
         RGB tuples
     """
-    return [c[:3] for c in cmap.colors]
+    if isinstance(cmap, basestring):
+        cmap = get_cmap(cmap)
+    elif isinstance(cmap, col.Colormap):
+        pass
+    else:
+        raise TypeError("The argument 'cmap' must be a colormap or colormap name")
+    try:
+        return [c[:3] for c in cmap.colors]
+    except AttributeError:
+        return [c[:3] for c in cmap(np.linspace(0, 1, 256))]
 
 
 def generate_discrete_cmap(color_list, name='CSIRO', n_colors=20):
@@ -145,7 +164,7 @@ def generate_discrete_cmap(color_list, name='CSIRO', n_colors=20):
         color_list = get_cmap(color_list)
     if isinstance(color_list, col.Colormap):
         sampling = np.linspace(0, 1, n_colors)
-        return col.ListedColormap(color_list(sampling), name=name)
+        return col.ListedColormap(color_list(sampling), name=color_list.name)
     color_list = [hex_to_rgb(c) for c in color_list]
     return col.ListedColormap(color_list, name=name)
 
@@ -189,7 +208,7 @@ def generate_linear_cmap(color_list, name='CSIRO'):
         color_list = get_cmap(color_list)
 
     if isinstance(color_list, col.ListedColormap):
-        return generate_linear_cmap(cmap_to_hex(color_list))
+        return generate_linear_cmap(cmap_to_hex(color_list), name=color_list.name)
     xs = np.linspace(0, 1, len(color_list))
     cdict = {}
     color_list = [hex_to_rgb(h) for h in color_list]
@@ -238,7 +257,12 @@ def randomize_cmap(cmap, n=None, seed=None):
 
 
 def get_cmap(cmap, return_hex=False):
-    if not isinstance(cmap, basestring):
+
+    if isinstance(cmap, basestring):
+        pass
+    elif isinstance(cmap, col.Colormap):
+        return cmap
+    else:
         raise TypeError("The argument cmap must be a valid colormap name")
     name = cmap
 
@@ -295,8 +319,6 @@ def brew_colors(cmap, nbins=None):
     ListedColormap or LinearSegmentColormap
         output colormap
     """
-    if not isinstance(cmap, basestring):
-        raise TypeError("The argument cmap must be a valid colormap name")
     name = cmap
 
     if nbins is False:
@@ -307,6 +329,8 @@ def brew_colors(cmap, nbins=None):
     elif isinstance(nbins, int):
 
         cmap = get_cmap(cmap)
+        if hasattr(cmap, 'colors') and nbins > len(cmap.colors):
+            cmap = generate_linear_cmap(cmap)
         sampling = np.linspace(0,1,nbins)
         return col.ListedColormap(cmap(sampling))
 
