@@ -1,0 +1,39 @@
+package:
+  name: csiro_colors
+  version: "1.0.0"
+
+source:
+  path: ../
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+  noarch: python
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    - matplotlib >=3.4.1
+    - ipython >=7.22
+    - numpy
+    - branca >=0.4.2
+
+test:
+  imports:
+    - csiro_colors
+
+about:
+  home: https://bitbucket.csiro.au/projects/PLAN/repos/csiro_colors/browse
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE
+  summary: "Colors and colormaps handler that supports Branca, Matplotlib and CSIRO colorschemes"
+  doc_url: https://confluence.csiro.au/display/DevOps/CSIRO+colour+python+library
+
+extra:
+  maintainer:
+      name: Alessio Arena
+      email: alessio.arena@csiro.au
