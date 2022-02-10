@@ -15,6 +15,7 @@ try:
 except NameError:
     # python 3
     basestring = (str, bytes)
+number = (int, float, np.integer, np.floating)
 
 
 def _smells_like_branca(cmap):
@@ -41,12 +42,26 @@ def print_color(color):
         hex codes to be printed in your jupyter notebook
     """
     out = ""
-    if isinstance(color, (list, np.ndarray)):
-        for c in color:
+    if not isinstance(color, (list, np.ndarray)) or all([isinstance(ci, number) for ci in color]):
+        color = [color]
+
+    for c in color:
+        if isinstance(c, basestring):
             out += "<b style='color: {0}'>{0}</b>   ".format(c)
-    else:
-        out += "<b style='color: {0}'>{0}</b>   ".format(color)
-    return display(HTML(out))
+        elif isinstance(c, (list, np.ndarray)):
+            if all([isinstance(ci, (int, np.integer)) for ci in c]) or any([ci > 1 for ci in c]):
+                c_elements = np.asarray(c).astype(int)
+            elif all([isinstance(ci, (float, np.floating)) for ci in c]):
+                c_elements = (np.asarray(c)*255).astype(int)
+            else:
+                raise TypeError('RGB values can only be floating or integer')
+            if len(c) == 3:
+                out += "<b style='color: rgb({0:d}, {1:d}, {2:d})'>{3}</b>   ".format(*c_elements, c)
+            elif len(c) == 4:
+                out += "<b style='color: rgba({0:d}, {1:d}, {2:d}, {3:d})'>{4}</b>   ".format(*c_elements, c)
+            else:
+                raise ValueError("incorrect number of channels for RGB/RGBA value: {0}".format(c))
+    return HTML(out)
 
 
 def hex_to_rgb(hex_code, normalized=True):
@@ -120,7 +135,7 @@ def cmap_to_hex(cmap):
     except AttributeError:
         return list(map(rgb_to_hex, cmap(np.linspace(0, 1, 256))))
 
-def cmap_to_rgb(cmap):
+def cmap_to_rgb(cmap, normalized=True):
     """Utility to convert a matplotlib.colors.Colormap to a list of RGB codes
 
     Parameters
@@ -139,10 +154,15 @@ def cmap_to_rgb(cmap):
         pass
     else:
         raise TypeError("The argument 'cmap' must be a colormap or colormap name")
+
+    if normalized:
+        n = 255
+    else:
+        n = 1
     try:
-        return [c[:3] for c in cmap.colors]
+        return [c[:3]*n for c in cmap.colors]
     except AttributeError:
-        return [c[:3] for c in cmap(np.linspace(0, 1, 256))]
+        return [c[:3]*n for c in cmap(np.linspace(0, 1, 256))]
 
 
 def generate_discrete_cmap(color_list, name='CSIRO', n_colors=20):
