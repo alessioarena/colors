@@ -35,7 +35,7 @@ python setup.py bdist_wheel --universal
 This command will create a folder called **dist** where your *whl* file will be
 stored
 
-Currently there is no recipe to build a **conda** package
+A **conda** package can be built using the `conda build` command. The required recipe is stored in the [conda.recipe](conda.recipe) folder
 
 ## License
 [CSIRO Open Source Software Licence v1.0](LICENSE)
