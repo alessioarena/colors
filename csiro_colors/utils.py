@@ -162,6 +162,9 @@ def generate_discrete_cmap(color_list, name='CSIRO', n_colors=20):
     """
     if isinstance(color_list, basestring):
         color_list = get_cmap(color_list)
+    elif isinstance(color_list, col.ListedColormap):
+        return color_list
+
     if isinstance(color_list, col.Colormap):
         sampling = np.linspace(0, 1, n_colors)
         return col.ListedColormap(color_list(sampling), name=color_list.name)
@@ -206,6 +209,8 @@ def generate_linear_cmap(color_list, name='CSIRO'):
     """
     if isinstance(color_list, basestring):
         color_list = get_cmap(color_list)
+    elif isinstance(color_list, col.LinearSegmentedColormap):
+        return color_list
 
     if isinstance(color_list, col.ListedColormap):
         return generate_linear_cmap(cmap_to_hex(color_list), name=color_list.name)
