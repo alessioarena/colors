@@ -11,7 +11,7 @@ requires = [
 
 setup(
     name="csiro_colors",
-    version="0.1.0",
+    version="0.2.0",
     description="CSIRO and generic colormap handler",
     author="Alessio Arena",
     author_email="alessio.arena@csiro.au",
