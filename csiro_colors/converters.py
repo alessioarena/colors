@@ -1,9 +1,5 @@
 import matplotlib.colors as col
-import matplotlib.cm as cm
-from IPython.core.display import HTML, display
 import numpy as np
-from itertools import cycle, islice
-from branca.utilities import color_brewer
 
 # for python 2 and python 3 compatibility
 try:

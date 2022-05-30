@@ -1,9 +1,6 @@
 import matplotlib.colors as col
-import matplotlib.cm as cm
-from IPython.core.display import HTML, display
 import numpy as np
 from itertools import cycle, islice
-from branca.utilities import color_brewer
 
 from .converters import *
 from .cmaps import get_cmap

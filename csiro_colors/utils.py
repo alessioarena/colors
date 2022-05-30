@@ -1,8 +1,7 @@
-import matplotlib.colors as col
-import matplotlib.cm as cm
-from IPython.core.display import HTML, display
 import numpy as np
-from itertools import cycle, islice
+from IPython.display import HTML
+
+from ._color_picker import colorPicker
 
 # for python 2 and python 3 compatibility
 try:

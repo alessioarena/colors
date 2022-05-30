@@ -4,7 +4,7 @@ import matplotlib.colors as col
 from .converters import hex_to_rgb, rgb_to_hex, cmap_to_hex, cmap_to_rgb, css_to_rgb, css_to_hex
 from .cmaps import matplotlib_registry, branca_registry, csiro_registry, get_cmap
 from .generators import generate_discrete_cmap, generate_linear_cmap, generate_palette, randomize_cmap
-from .utils import print_color
+from .utils import print_color, colorPicker
 
 
 def brew_colors(cmap, nbins=None):
