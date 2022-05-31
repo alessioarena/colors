@@ -17,4 +17,5 @@ setup(
     author_email="alessio.arena@csiro.au",
     packages = find_packages(),
     install_requires=requires,
+    include_package_data=True,
 )
