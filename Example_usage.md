@@ -78,19 +78,27 @@ ccol.print_color(rgb_colors)
 
 ## References
 
-For a full list of **matplotlib** colormaps, please refer to [matplotlib documentation](https://matplotlib.org/stable/gallery/color/colormap_reference.html)
+For a full list of **matplotlib**, **branca** or **CSIRO** colormaps, please refer to [matplotlib documentation](https://matplotlib.org/stable/gallery/color/colormap_reference.html), [R documentation](https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html)
 or use:
 ```Python
-list(ccol.csiro_registry)
+ccol.csiro_registry
+# or ccol.branca_registry
+# or ccol.matplotlib_registry
 ```
+![CSIRO registry](media/csiro_registry.png)
 
-For a full list of **colorbrewer** colormaps, please refer to this [R documentation](https://rdrr.io/cran/RColorBrewer/man/ColorBrewer.html)
-or use:
+Using the registry you can also select the wanted colormap
 ```Python
-list(ccol.branca_registry)
+ccol.csiro_registry['csiro_all']
+# or ccol.branca_registry['Spectral']
+# or ccol.matplotlib_registry['inferno']
 ```
+![CSIRO colormap](media/csiro_colormap.png)
 
-For available **CSIRO** colormaps please use:
+## Color Picker
+
+This library also provides a handy HTML5 and CSS powered color picker to select and explore colors
 ```Python
-list(ccol.csiro_registry)
+ccol.colorPicker
 ```
+![Color Picker](media/csiroColorPicker.gif)
