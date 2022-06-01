@@ -158,17 +158,82 @@ def get_cmap(cmap, return_hex=False):
     else:
         return cmap
 
+csiro_named_colors = dict(
+    csiro_darkblue = '#001c2b',
+    csiro_lightblue = '#00b9e0',
+    csiro_black = '#2c2e35',
+    csiro_darkgrey = '#787a7e',
+    csiro_lightgrey = '#e0e0e2',
+    csiro_blue = '#0b359c',
+    csiro_steelblue = '#0068a8',
+    csiro_purple = '#6d2382',
+    csiro_teal = '#007b88',
+    csiro_darkgreen = '#008165',
+    csiro_pink = '#f956a9',
+    csiro_orange = '#ff7b28',
+    csiro_yellow = '#ffb840',
+    csiro_lavander = '#83acda',
+    csiro_aquamarine = '#6dcda4',
+    csiro_lightgreen = '#75c447',
+    csiro_aqua = '#6fd4d6',
+    csiro_red = '#E4002B',
+)
 
-csiro_main = ['#00313C', '#00A9CE']
-csiro_core = csiro_main + ['#000000', '#757579', '#dadbdc']
-csiro_primary = ['#1E22AA', '#004B87', '#6D2077', '#007377', '#007A53']
-csiro_secondary = ['#DF1995', '#E87722', '#FFB81C', '#9FAEE5', '#71CC98', '#78BE20', '#2DCCD3']
-csiro_cold = ['#9FAEE5', '#1E22AA', '#41B6E6', '#004B87', '#2DCCD3', '#007377', '#71CC98', '#007A53', '#78BE20', '#44693D']
-csiro_warm = ['#6D2077', '#DF1995', '#E4002B', '#E87722', '#FFB81C']
-csiro_blues = ['#9FAEE5', '#1E22AA', '#41B6E6', '#004B87', '#2DCCD3', '#007377']
-csiro_greens = ['#71CC98', '#007A53', '#78BE20', '#44693D']
-csiro_reds = ['#6D2077', '#DF1995', '#E4002B', '#E87722', '#FFB81C']
-csiro_all = csiro_main + csiro_blues + csiro_greens + csiro_reds
+csiro_main = [csiro_named_colors['csiro_darkblue'], csiro_named_colors['csiro_lightblue']]
+csiro_core = csiro_main + [csiro_named_colors['csiro_black'], csiro_named_colors['csiro_darkgrey'], csiro_named_colors['csiro_lightgrey']]
+csiro_primary = [
+    csiro_named_colors['csiro_blue'],
+    csiro_named_colors['csiro_steelblue'],
+    csiro_named_colors['csiro_purple'],
+    csiro_named_colors['csiro_teal'],
+    csiro_named_colors['csiro_darkgreen']
+]
+csiro_secondary = [
+    csiro_named_colors['csiro_pink'],
+    csiro_named_colors['csiro_orange'],
+    csiro_named_colors['csiro_yellow'],
+    csiro_named_colors['csiro_lavander'],
+    csiro_named_colors['csiro_aquamarine'],
+    csiro_named_colors['csiro_lightgreen'],
+    csiro_named_colors['csiro_aqua']
+]
+csiro_cold = [
+    csiro_named_colors['csiro_lavander'],
+    csiro_named_colors['csiro_blue'],
+    csiro_named_colors['csiro_steelblue'],
+    csiro_named_colors['csiro_aqua'],
+    csiro_named_colors['csiro_teal'],
+    csiro_named_colors['csiro_aquamarine'],
+    csiro_named_colors['csiro_darkgreen'],
+    csiro_named_colors['csiro_lightgreen']
+]
+csiro_warm = [
+    csiro_named_colors['csiro_purple'],
+    csiro_named_colors['csiro_pink'],
+    csiro_named_colors['csiro_red'],
+    csiro_named_colors['csiro_orange'],
+    csiro_named_colors['csiro_yellow']
+]
+csiro_blues = [
+    csiro_named_colors['csiro_lavander'],
+    csiro_named_colors['csiro_blue'],
+    csiro_named_colors['csiro_steelblue'],
+    csiro_named_colors['csiro_aqua'],
+    csiro_named_colors['csiro_teal']
+]
+csiro_greens = [
+    csiro_named_colors['csiro_aquamarine'],
+    csiro_named_colors['csiro_darkgreen'],
+    csiro_named_colors['csiro_lightgreen']
+]
+csiro_reds = [
+    csiro_named_colors['csiro_purple'],
+    csiro_named_colors['csiro_pink'],
+    csiro_named_colors['csiro_red'],
+    csiro_named_colors['csiro_orange'],
+    csiro_named_colors['csiro_yellow']
+]
+csiro_all = csiro_core + csiro_blues + csiro_greens + csiro_reds
 
 csiro_registry = {
     'csiro_main' : csiro_main, 
