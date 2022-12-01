@@ -2,6 +2,7 @@ import numpy as np
 from IPython.display import HTML
 
 from ._color_picker import colorPicker
+from .converters import NAMED_COLORS
 
 # for python 2 and python 3 compatibility
 try:
@@ -27,7 +28,10 @@ def print_color(color):
 
     for c in color:
         if isinstance(c, basestring):
-            out += "<b style='color: {0}'>{0}</b>   ".format(c)
+            try:
+                out += "<b style='color: {1}'>{0}</b>   ".format(c, NAMED_COLORS[c])
+            except KeyError:
+                out += "<b style='color: {0}'>{0}</b>   ".format(c)
         elif isinstance(c, (list, np.ndarray)):
             if all([isinstance(ci, (int, np.integer)) for ci in c]) or any([ci > 1 for ci in c]):
                 c_elements = np.asarray(c).astype(int)
