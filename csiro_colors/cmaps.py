@@ -1,5 +1,5 @@
 from branca.colormap import _schemes as branca_registry
-from matplotlib.cm import _cmap_registry as matplotlib_registry
+from matplotlib.cm import _gen_cmap_registry
 from base64 import b64encode
 from io import BytesIO
 from matplotlib.colors import Colormap
@@ -17,6 +17,8 @@ except NameError:
 number = (int, float, np.integer, np.floating)
 
 from .converters import hex_to_rgb, cmap_to_hex
+
+matplotlib_registry = _gen_cmap_registry()
 
 class ColormapCatalog():
     __colormap_image_catalog = None

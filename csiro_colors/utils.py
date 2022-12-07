@@ -32,7 +32,6 @@ def print_color(color):
                 out += "<b style='color: {1}'>{0}</b>   ".format(c, NAMED_COLORS[c])
             except KeyError:
                 out += "<b style='color: {0}'>{0}</b>   ".format(c)
-
         elif isinstance(c, (list, np.ndarray)):
             if all([isinstance(ci, (int, np.integer)) for ci in c]) or any([ci > 1 for ci in c]):
                 c_elements = np.asarray(c).astype(int)

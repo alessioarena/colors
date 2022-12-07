@@ -8,13 +8,9 @@ class ColorPicker():
     var uid = '{uid}';
     var named_colors = {colors};
     var currentFrame = document.querySelector('#ColorPickerShadowRoot_' + uid)
-    console.log(currentFrame)
     var shadow = currentFrame.attachShadow({{mode: 'open'}});
-    console.log(shadow)
     var template = currentFrame.querySelector('#ColorPickerTemplate');
-    console.log(template)
     var clone = document.importNode(template.content, true);
-    console.log(clone)
     shadow.appendChild(clone);
     """
     _js = """
@@ -54,6 +50,22 @@ class ColorPicker():
 
         populateHslTable(hsl_val, currentWidget);
         populateColorTable(hsl_val, currentWidget);
+
+        closerNamedColors = findCloserColors(xyzToLab(rgbToXyz(rgb_val)));
+
+        sg_el_index = 1
+        for (var i=0; i < 5; i++) {
+            if (named_colors[closerNamedColors[i]] == event.target.value) {
+                continue
+            }
+
+            sg_el = currentWidget.querySelector('#suggested_colors' + sg_el_index.toString())
+            sg_el.innerHTML = closerNamedColors[i];
+            sg_el.style.backgroundColor = named_colors[closerNamedColors[i]];
+            adjustColor(sg_el, rgbToHsl(hexToRgb(named_colors[closerNamedColors[i]])));
+            sg_el_index ++
+        }
+
     }
 
     function watchColorSelector(event) {
@@ -166,7 +178,7 @@ class ColorPicker():
         console.log(picker);
 
         console.log('clicked2');
-        var hex_code = el.innerHTML.slice(-7)
+        var hex_code = rgbToHex(el.style.backgroundColor);
         console.log(hex_code);
         picker.value = hex_code;
         picker.dispatchEvent(changeEvent);
@@ -187,6 +199,10 @@ class ColorPicker():
     }
 
     function rgbToHex(rgb) {
+        if (typeof rgb == 'string' ) {
+            rgb = digestRGBCode(rgb);
+        }
+
         var r = componentToHex(rgb.r),
             g = componentToHex(rgb.g),
             b = componentToHex(rgb.b);
@@ -283,6 +299,74 @@ class ColorPicker():
         };
     }
 
+    function rgbToXyz(rgb){
+        var r = parseFloat(rgb.r / 255 ),
+            g = parseFloat(rgb.g / 255 ),       //G from 0 to 255
+            b = parseFloat(rgb.b / 255 )        //B from 0 to 255
+
+        if ( r > 0.04045 ) r = Math.pow( (( r + 0.055 ) / 1.055 ), 2.4)
+        else                   r = r / 12.92
+        if ( g > 0.04045 ) g = Math.pow( (( g + 0.055 ) / 1.055 ), 2.4)
+        else                   g = g / 12.92
+        if ( b > 0.04045 ) b = Math.pow( (( b + 0.055 ) / 1.055 ), 2.4)
+        else                   b = b / 12.92
+
+        r = r * 100
+        g = g * 100
+        b = b * 100
+
+        //Observer. = 2°, Illuminant = D65
+        return {
+            x: r * 0.4124 + g * 0.3576 + b * 0.1805,
+            y: r * 0.2126 + g * 0.7152 + b * 0.0722,
+            z: r * 0.0193 + g * 0.1192 + b * 0.9505
+        };
+    }
+
+
+    function xyzToLab(xyz) {
+        const ref_X =  95.047,
+              ref_Y = 100.000,
+              ref_Z = 108.883;
+
+        var x = xyz.x / ref_X,          //ref_X =  95.047   Observer= 2°, Illuminant= D65
+            y = xyz.y / ref_Y,          //ref_Y = 100.000
+            z = xyz.z / ref_Z;          //ref_Z = 108.883
+
+        if ( x > 0.008856 ) x = Math.pow(x, ( 1/3 ))
+        else                    x = ( 7.787 * x ) + ( 16 / 116 )
+        if ( y > 0.008856 ) y = Math.pow(y, ( 1/3 ))
+        else                    y = ( 7.787 * y ) + ( 16 / 116 )
+        if ( z > 0.008856 ) z = Math.pow(z, ( 1/3 ))
+        else                    z = ( 7.787 * z ) + ( 16 / 116 )
+
+        return {
+            l: ( 116 * y ) - 16,
+            a: 500 * ( x - y ),
+            b: 200 * ( y - z )
+        }
+    }
+
+    var named_color_lab = { }
+    for (const [key, value] of Object.entries(named_colors)) {
+        named_color_lab[key] = xyzToLab(rgbToXyz(hexToRgb(value)))
+    }
+
+    // https://stackoverflow.com/questions/46622486/what-is-the-javascript-equivalent-of-numpy-argsort
+    var argsort = (arr1, arr2) => arr1
+        .map((item, index) => [arr2[index], item]) // add the args to sort by
+        .sort(([arg1], [arg2]) => arg2 - arg1) // sort by the args
+        .map(([, item]) => item); // extract the sorted items
+
+    function findCloserColors(target_labColor, n_colors=5) {
+        var colorDistance = { }
+        for (const [key, value] of Object.entries(named_color_lab)) {
+            colorDistance[key] = Math.sqrt( Math.pow(target_labColor.l - value.l, 2) + Math.pow(target_labColor.a - value.a, 2) + Math.pow(target_labColor.b - value.b, 2) )
+        }
+
+        closerColors = argsort(Object.keys(colorDistance), Object.values(colorDistance))
+        return closerColors.slice(-n_colors).reverse()
+    }
 
     colorPicker.dispatchEvent(changeEvent)
     """
@@ -315,7 +399,11 @@ class ColorPicker():
         .analogue1:hover,
         .analogue2:hover,
         .triadic1:hover,
-        .triadic2:hover {
+        .triadic2:hover,
+        #suggested_colors1:hover,
+        #suggested_colors2:hover,
+        #suggested_colors3:hover,
+        #suggested_colors4:hover {
             transform: scale(0.96);
         }
         #color_selector {
@@ -326,12 +414,12 @@ class ColorPicker():
         }
         #input_label {
             position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
+            width: 50%;
+            height: 50%;
+            top: 25%;
+            left: 25%;
             z-index: 99;
-            line-height: 100px;
+            line-height: normal;
             pointer-events: none;
             }
         p   {
@@ -446,6 +534,17 @@ class ColorPicker():
                         <td colspan=2 rowspan=1 class='empty'></td>
                         <td colspan=2 rowspan=1 class='empty'></td>
                         <td colspan=2 rowspan=1 class='hsl_cell'><div class="100perc" onclick='copyHexColor(this)'>100%</div></td>
+                    </tr>
+                    <tr colspan=6>
+                        <td colspan=2 rowspan=1 class='value_element'>
+                            <p class='value_element'>Suggested Named Colors</p>
+                        </td>
+                        <td colspan=4 rowspan=1 class='value_element'>
+                            <p class='value_element' id='suggested_colors1' onclick='copyHexColor(this)' style="width:23%; display:inline-block">Suggested Named Colors</p>
+                            <p class='value_element' id='suggested_colors2' onclick='copyHexColor(this)' style="width:23%; display:inline-block">Suggested Named Colors</p>
+                            <p class='value_element' id='suggested_colors3' onclick='copyHexColor(this)' style="width:23%; display:inline-block">Suggested Named Colors</p>
+                            <p class='value_element' id='suggested_colors4' onclick='copyHexColor(this)' style="width:23%; display:inline-block">Suggested Named Colors</p>
+                        </td>
                     </tr>
 
                 </tbody>
